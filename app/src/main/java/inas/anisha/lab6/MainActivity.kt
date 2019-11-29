@@ -6,8 +6,10 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,8 +18,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    }
+
+    override fun onStart() {
+        super.onStart()
 
         if (isPermissionsGranted()) {
             changeWifi()
@@ -30,13 +35,28 @@ class MainActivity : AppCompatActivity() {
                 LOCATION_REQUEST
             )
         }
-    }
 
+        Handler().postDelayed({
+            if (wifiManager.connectionInfo.ssid == SSID) {
+                result.text = concatenateString("Connection to specified wifi: ", "success")
+            } else {
+                result.text = concatenateString("Connection to specified wifi: ", "failed")
+            }
+
+            if (wifiManager.isWifiEnabled && wifiManager.connectionInfo.networkId != -1) {
+                connection.text =
+                    concatenateString("Wifi is connected to: ", wifiManager.connectionInfo.ssid)
+            } else {
+                connection.text = concatenateString("Wifi is", " not connected")
+            }
+        }, 7000)
+
+    }
     private fun changeWifi() {
         if (!wifiManager.isWifiEnabled) wifiManager.isWifiEnabled = true
 
         wifiManager.configuredNetworks.forEach {
-            if (it.SSID == "\"" + "Nanik Sri Rezeki" + "\"") {
+            if (it.SSID == SSID) {
                 wifiManager.disconnect()
                 wifiManager.enableNetwork(it.networkId, true)
                 wifiManager.reconnect()
@@ -45,8 +65,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val wifiConfig = WifiConfiguration()
-        wifiConfig.SSID = "\"" + "Nanik Sri Rezeki" + "\""
-        wifiConfig.preSharedKey = String.format("\"%s\"", "140697NA")
+        wifiConfig.SSID = SSID
+        wifiConfig.preSharedKey = PASSWORD
 
         val netId = wifiManager.addNetwork(wifiConfig)
         wifiManager.enableNetwork(netId, true)
@@ -73,7 +93,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    external fun concatenateString(firstString: String, secondString: String): String
+
     companion object {
+        init {
+            System.loadLibrary("native-lib")
+        }
         const val LOCATION_REQUEST = 101
+        const val SSID = "\"" + "Nanik Sri Rezeki" + "\""
+        const val PASSWORD = "\"" + "140697NA" + "\""
+
     }
 }
