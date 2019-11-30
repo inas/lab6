@@ -10,7 +10,7 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_inas_anisha_lab6_MainActivity_concatenateString(
         JNIEnv *env,
         jobject, jstring firstString, jstring secondString) {
-    char returnString[40];
+    char returnString[50];
     const char *fS = env->GetStringUTFChars(firstString, NULL);
     const char *sS = env->GetStringUTFChars(secondString, NULL);
 
